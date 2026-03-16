@@ -10,35 +10,39 @@ import (
 )
 
 func DatabaseInstance() *mongo.Client {
-	err := godotenv.Load(".env")
+
+	err := godotenv.Load()
 	if err != nil {
-		log.Println("warning could not vload the .env file")
+		log.Println("warning: could not load the .env file")
 	}
+	log.Println("ENV TEST:", os.Getenv("MONGO_URI"))
+
 	MongoDb := os.Getenv("MONGO_URI")
 	if MongoDb == "" {
-		log.Fatal("warning unable to load the Mongodb uri")
+		log.Fatal("MONGO_URI not found in environment variables")
 	}
-	clientoptions := options.Client().ApplyURI(MongoDb)
-	client, err := mongo.Connect(clientoptions)
+
+	client, err := mongo.Connect(options.Client().ApplyURI(MongoDb))
 	if err != nil {
-		return nil
+		log.Fatal(err)
 	}
+
+	log.Println("MongoDB connected successfully")
+
 	return client
 }
 
 var Client *mongo.Client = DatabaseInstance()
 
 func OpenCollection(CollectionName string) *mongo.Collection {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Println("warning an error occured while loading the connection", err)
 
-	}
 	databaseName := os.Getenv("DATABASE_NAME")
-	Collection := Client.Database(databaseName).Collection(CollectionName)
-	if Collection == nil {
-		return nil
-	}
-	return Collection
 
+	if databaseName == "" {
+		log.Fatal("DATABASE_NAME not set in .env")
+	}
+
+	Collection := Client.Database(databaseName).Collection(CollectionName)
+
+	return Collection
 }

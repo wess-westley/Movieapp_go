@@ -1,21 +1,24 @@
 package main
 
 import (
+	"Magic/routes"
 	"fmt"
+	"log"
 
-	controllers "Magic/controllers"
+	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println("warning could not load the .env file")
+	}
 
-	// Route for movies
-	router.GET("/Movies", controllers.GetMovies())
-	router.GET("/Movie/:imdb_id", controllers.GetMovie())
-	router.POST("/Add", controllers.Addmovies())
-	router.POST("/registeruser", controllers.RegisterUser())
+	routes.SetPublicRoute(router)
+	routes.SetProtectedRoute(router)
 
 	// Test route
 	router.GET("/hello", func(c *gin.Context) {

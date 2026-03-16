@@ -3,6 +3,7 @@ package controllers
 import (
 	database "Magic/Database"
 	Models "Magic/Models"
+	"Magic/utilis"
 	"context"
 	"net/http"
 	"time"
@@ -32,7 +33,7 @@ func RegisterUser() gin.HandlerFunc {
 		var user Models.User
 
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "error occurred during registration"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "error occurred during registration", "details": err.Error()})
 			return
 		}
 
@@ -76,24 +77,73 @@ func RegisterUser() gin.HandlerFunc {
 }
 func UserLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		var userLogin Models.Userlogin
+
 		if err := c.ShouldBindJSON(&userLogin); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "invalid input",
+			})
 			return
 		}
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
-		var FoundUser Models.User
-		err := usercollection.FindOne(ctx, bson.M{"Email": userLogin.Email}).Decode(&FoundUser)
+
+		var foundUser Models.User
+
+		err := usercollection.FindOne(ctx, bson.M{"Email": userLogin.Email}).Decode(&foundUser)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenicated"})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "user not authenticated",
+			})
 			return
 		}
-		if err := bcrypt.CompareHashAndPassword([]byte(FoundUser.Password), []byte(userLogin.Password)); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password check your password and try again"})
-			return
 
+		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(userLogin.Password))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "invalid password",
+			})
+			return
 		}
 
+		token, refreshToken, err := utilis.GenerateTokens(
+			foundUser.FirstName,
+			foundUser.LastName,
+			foundUser.Email,
+			foundUser.UserID,
+			foundUser.Role,
+			foundUser.MiddleName,
+		)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "could not generate auth token",
+				"details": err.Error(),
+			})
+			return
+		}
+
+		err = utilis.UpdateTokens(foundUser.UserID, token, refreshToken)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "could not update tokens",
+				"details": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Models.Userresponse{
+			UserId:        foundUser.UserID,
+			FirstName:     foundUser.FirstName,
+			MiddleName:    foundUser.MiddleName,
+			LastName:      foundUser.LastName,
+			Email:         foundUser.Email,
+			Role:          foundUser.Role,
+			Token:         token,
+			Refresh_token: refreshToken,
+			Favorite:      foundUser.Favorite,
+		})
 	}
 }

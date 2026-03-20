@@ -7,37 +7,30 @@ import (
 )
 
 type User struct {
-	ID     bson.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	UserID string        `json:"user_id" bson:"user_id"`
-
-	FirstName string `bson:"FirstName" json:"FirstName" validate:"required,max=100,min=3"`
-
-	MiddleName string `bson:"MiddleName" json:"MiddleName" validate:"required,max=100,min=3"`
-
-	LastName string `bson:"Lastname" json:"Lastname" validate:"required,max=100,min=4"`
-
-	Email string `bson:"Email" json:"Email" validate:"required,email"`
-
-	Password     string    `bson:"password" json:"password" validate:"required,min=5"`
-	CreatedAt    time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `bson:"updated_at" json:"updated_at"`
-	Role         string    `bson:"role" json:"role" validate:"oneof=ADMIN USER"`
-	Token        string    `bson:"token" json:"token"`
-	RefreshToken string    `bson:"refresh_token" json:"refresh_token"`
-	Favorite     []Genre   `bson:"favorite" json:"favorite" validate:"required,dive"`
+	ID              bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserID          string        `json:"user_id" bson:"user_id"`
+	FirstName       string        `json:"first_name" bson:"first_name" validate:"required,min=2,max=100"`
+	LastName        string        `json:"last_name" bson:"last_name" validate:"required,min=2,max=100"`
+	Email           string        `json:"email" bson:"email" validate:"required,email"`
+	Password        string        `json:"password" bson:"password" validate:"required,min=6"`
+	Role            string        `json:"role" bson:"role" validate:"oneof=ADMIN USER"`
+	CreatedAt       time.Time     `json:"created_at" bson:"created_at"`
+	UpdatedAt       time.Time     `json:"update_at" bson:"update_at"`
+	Token           string        `json:"token" bson:"token"`
+	RefreshToken    string        `json:"refresh_token" bson:"refresh_token"`
+	FavouriteGenres []Genre       `json:"favourite_genres" bson:"favourite_genres" validate:"required,dive"`
 }
-type Userlogin struct {
-	Email    string `json:"Email" validate:"required,email"`
+type UserLogin struct {
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
 }
-type Userresponse struct {
-	UserId        string  `json:"user_id"`
-	FirstName     string  `json:"FirstName"`
-	MiddleName    string  `json:"MiddleName"`
-	Email         string  `json:"Email"`
-	Role          string  `json:"Role"`
-	Token         string  `json:"token"`
-	Refresh_token string  `json:"refresh_token"`
-	LastName      string  `json:"Lastname" `
-	Favorite      []Genre `json:"favorite_genres" `
+type UserResponse struct {
+	UserId          string  `json:"user_id"`
+	FirstName       string  `json:"first_name"`
+	LastName        string  `json:"last_name"`
+	Email           string  `json:"email"`
+	Role            string  `json:"role"`
+	Token           string  `json:"token"`
+	RefreshToken    string  `json:"refresh_token"`
+	FavouriteGenres []Genre `json:"favourite_genres"`
 }
